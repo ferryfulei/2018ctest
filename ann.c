@@ -8,13 +8,13 @@ ann_t *ann_create(int num_layers, int *layer_outputs)
     return NULL;
   }
   ann->input_layer = layer_create();
-  if (!layer_init(ann->input_layer, layer_outputs[0], NULL)) {
+  if (layer_init(ann->input_layer, layer_outputs[0], NULL)) {
     return NULL;
   }
   layer_t *prev = ann->input_layer;
   for (int i = 1; i < num_layers; i++) {
     layer_t *current_layer = layer_create();
-    if (!layer_init(current_layer, layer_outputs[i], prev)) {
+    if (layer_init(current_layer, layer_outputs[i], prev)) {
       return NULL;
     }
     prev->next = current_layer;
@@ -29,7 +29,6 @@ void ann_free(ann_t *ann)
 {
   layer_t *pointer = ann->input_layer;
   while (pointer) {
-    layer_free(pointer);
     layer_t *next = pointer->next;
     free(pointer);
     pointer = next;
@@ -61,7 +60,15 @@ void ann_train(ann_t const *ann, double const *inputs, double const *targets, do
   /* Run forward pass. */
   ann_predict(ann, inputs);
 
-  /**** PART 2 - QUESTION 4 ****/
-
-  /* 3 MARKS */
+  layer_t *output_layer = ann->output_layer;
+  double *output_deltas = output_layer->deltas;
+  for (int j = 0; j < output_layer->num_outputs; j++) {
+    output_deltas[j] = sigmoidprime(output_layer->outputs[j]) * (targets[j] - output_layer->outputs[j]);
+  }
+  layer_t *current_layer = output_layer->prev;
+  while (current_layer != ann->input_layer) {
+    layer_compute_deltas(current_layer);
+    layer_update(current_layer, l_rate);
+    current_layer = current_layer->prev;
+  }
 }

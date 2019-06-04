@@ -15,7 +15,7 @@ double sigmoidprime(double x)
 /* Creates a single layer. */
 layer_t *layer_create()
 {
-  layer_t *layer = (layer_t*)malloc(sizeof(layer_t*));
+  layer_t *layer = (layer_t*)malloc(sizeof(layer_t));
   layer->num_inputs = 0;
   layer->num_outputs = 0;
   layer->prev = NULL;
@@ -56,7 +56,7 @@ bool layer_init(layer_t *layer, int num_outputs, layer_t *prev)
     layer->deltas = (double*)malloc(sizeof(double) * num_inputs);
     return false;
   } 
-  return true;
+  return false;
 }
 
 /* Frees a given layer. */
@@ -89,17 +89,31 @@ void layer_compute_outputs(layer_t const *layer)
 /* Computes the delta errors for this layer. */
 void layer_compute_deltas(layer_t const *layer)
 {
-  /**** PART 1 - QUESTION 6 ****/
-  /* objective: compute layer->deltas */
-
-  /* 2 MARKS */
+  double *next_layer_deltas = layer->next->deltas;
+  double **connection_weight = layer->next->weights;
+  double *deltas = layer->deltas;
+  for (int i = 0; i < layer->num_outputs; i++) {
+    double sum = 0;
+    for (int j = 0; j < layer->next->num_outputs; j++) {
+      sum += connection_weight[i][j] * layer->next->deltas[j];
+    }
+    deltas[i] = sigmoidprime(layer->outputs[i]) * sum;
+  }
 }
 
 /* Updates weights and biases according to the delta errors given learning rate. */
 void layer_update(layer_t const *layer, double l_rate)
 {
-  /**** PART 1 - QUESTION 7 ****/
-  /* objective: update layer->weights and layer->biases */
-
-  /* 1 MARK */
+  double **weight = layer->weights;
+  double *previous_output = layer->prev->outputs;
+  double *deltas = layer->deltas;
+  double *bias = layer->biases;
+  for (int i = 0; i < layer->prev->num_outputs; i++) {
+    for (int j = 0; j < layer->num_outputs; j++) {
+      weight[i][j] += l_rate * previous_output[i] * deltas[j];
+    }
+  }
+  for (int j = 0; j < layer->outputs; j++) {
+    bias[j] += l_rate * deltas[j];
+  }
 }

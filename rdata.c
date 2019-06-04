@@ -43,6 +43,9 @@ int main(int argc, char *argv[])
     printf("-> %f\n", targets[i]);
   }
 
+  for (int i = 0; i < input_rows; i++) {
+    free(inputs[i]);
+  }
   /* Free up resources. */
   free(targets);
   free(inputs);
